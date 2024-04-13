@@ -1,24 +1,61 @@
-import logo from './logo.svg';
-import './App.css';
+import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { Container, VStack, Spinner } from '@chakra-ui/react';
+import Header from './components/Header'
+import Searchbar from './components/Searchbar';
+import Cointable from './components/Cointable';
 
 function App() {
+
+  const [coins, setCoins] = useState([]);
+
+  const [search, setSearch] = useState("");
+  const [loaded, setLoaded] = useState(false);
+
+  const getCoins = async () => {
+    const uri = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false';
+    await axios.get(uri)
+      .then(res => {
+        setCoins(res.data);
+        // console.log(res.data);
+        setLoaded(true);
+      }).catch(error => {
+        console.error('There was an error!', error);
+      })
+  }
+
+  useEffect(() => {
+    getCoins();
+  }, [])
+
+  const filterCoins = coins.filter((coin) => (
+    coin.name.toLowerCase().includes(search.toLowerCase())
+  ))
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <>
+      <Header />
+
+      <Container maxW={'5xl'} py={6}>
+        <VStack spacing={10}>
+          <Searchbar search={search} setSearch={setSearch} />
+          {
+            !loaded ? (
+              <Spinner
+                thickness='4px'
+                speed='0.5s'
+                emptyColor='gray.600'
+                color='purple.500'
+                size='xl'
+              />
+            ) : (
+              <Cointable coins={filterCoins} />
+            )
+          }
+        </VStack>
+      </Container>
+
+    </>
   );
 }
 
